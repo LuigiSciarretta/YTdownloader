@@ -1,33 +1,21 @@
-# downloader.py
-import os
+from pathlib import Path
+from tkinter import filedialog, messagebox
 import yt_dlp
+import os
 
-def download_audio(url: str, output_path: str = "./downloads"):
-    os.makedirs(output_path, exist_ok=True)
-    ydl_opts = {
-        'outtmpl': os.path.join(output_path, '%(title)s.%(ext)s'),
-        'format': 'bestaudio/best',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '0'  # '0' indica la migliore qualità disponibile
-        }],
-    }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-    # Costruiamo il percorso del file generato (supponendo l'estensione .mp3)
-    file_path = os.path.join(output_path, f"{info.get('title', 'output')}.mp3")
-    return file_path
 
-def download_video(url: str, output_path: str = "./downloads"):
-    os.makedirs(output_path, exist_ok=True)
-    ydl_opts = {
-        'outtmpl': os.path.join(output_path, '%(title)s.%(ext)s'),
-        'format': 'bestvideo+bestaudio/best',
-        'merge_output_format': 'mp4'
+download_path = os.path.join(Path.home(), "Downloads")
+
+# Funzione per il download
+def download_video_or_audio(url, format_choice):
+    # Configurazione delle opzioni di yt-dlp
+    options = {
+        "format": "bestaudio" if format_choice == "mp3" else "bestvideo+bestaudio",
+        "outtmpl": f"{download_path}/%(title)s.%(ext)s"
     }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-    # Costruiamo il percorso del file generato (supponendo l'estensione .mp4)
-    file_path = os.path.join(output_path, f"{info.get('title', 'output')}.mp4")
-    return file_path
+
+    with yt_dlp.YoutubeDL(options) as ydl:
+        try:
+            ydl.download([url])
+        except Exception as e:
+            messagebox.showerror("Errore", f"Si è verificato un errore durante il download: {e}")
